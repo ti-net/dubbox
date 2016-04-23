@@ -33,8 +33,6 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
-
 import com.alibaba.dubbo.common.Constants;
 import com.alibaba.dubbo.common.URL;
 import com.alibaba.dubbo.common.logger.Logger;
@@ -70,7 +68,7 @@ public class RedisRegistry extends FailbackRegistry {
 
 	private final String root;
 
-	private final Map<String, JedisPool> jedisPools = new ConcurrentHashMap<String, JedisPool>();
+	private final ConcurrentMap<String, JedisPool> jedisPools = new ConcurrentHashMap<String, JedisPool>();
 
 	private final ConcurrentMap<String, Notifier> notifiers = new ConcurrentHashMap<String, Notifier>();
 
@@ -90,18 +88,18 @@ public class RedisRegistry extends FailbackRegistry {
 
 		String cluster = url.getParameter("cluster", "failover");
 
-		if (!"failover".equals(cluster) && !"replicate".equals(cluster)) {
+		// fix by Jiangsl:监控中心会将cluster设置为failsafe导致报错 @see DubboMonitorFactroy#createMonitor()
+		/*if (!"failover".equals(cluster) && !"replicate".equals(cluster)) {
 			throw new IllegalArgumentException("Unsupported redis cluster: " + cluster
 					+ ". The redis cluster only supported failover or replicate.");
-		}
+		}*/
 
 		replicate = "replicate".equals(cluster);
 
 		// fix by Jiangsl:升级为commons-pool2，并优化Jedis配置
 		JedisPoolConfig config = new JedisPoolConfig();
-
-		config.setMaxTotal(url.getParameter("max.total", 20));
-		config.setMaxIdle(url.getParameter("max.idle", 20));
+		config.setMaxTotal(url.getParameter("max.total", 2));
+		config.setMaxIdle(url.getParameter("max.idle", 2));
 		config.setMinIdle(url.getParameter("min.idle", 1));
 
 		int database = url.getParameter("database", 0);
@@ -115,6 +113,10 @@ public class RedisRegistry extends FailbackRegistry {
 			addresses.addAll(Arrays.asList(backups));
 		}
 		for (String address : addresses) {
+			if(jedisPools.containsKey(address)){
+				continue;
+			}
+			
 			int i = address.indexOf(':');
 			String host;
 			int port;
@@ -128,7 +130,7 @@ public class RedisRegistry extends FailbackRegistry {
 
 			JedisPool pool = new JedisPool(config, host, port, timeout, password, database);
 
-			this.jedisPools.put(address, pool);
+			jedisPools.put(address, pool);
 		}
 
 		this.reconnectPeriod = url.getParameter(Constants.REGISTRY_RECONNECT_PERIOD_KEY,
