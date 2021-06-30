@@ -37,6 +37,8 @@ import com.alibaba.dubbo.common.utils.NetUtils;
 import com.alibaba.dubbo.common.utils.ReflectUtils;
 import com.alibaba.dubbo.common.utils.StringUtils;
 import com.alibaba.dubbo.config.annotation.Reference;
+import com.alibaba.dubbo.config.model.ApplicationModel;
+import com.alibaba.dubbo.config.model.ConsumerModel;
 import com.alibaba.dubbo.config.support.Parameter;
 import com.alibaba.dubbo.rpc.Invoker;
 import com.alibaba.dubbo.rpc.Protocol;
@@ -49,6 +51,8 @@ import com.alibaba.dubbo.rpc.cluster.support.ClusterUtils;
 import com.alibaba.dubbo.rpc.protocol.injvm.InjvmProtocol;
 import com.alibaba.dubbo.rpc.service.GenericService;
 import com.alibaba.dubbo.rpc.support.ProtocolUtils;
+
+import static com.alibaba.dubbo.common.utils.NetUtils.isInvalidLocalHost;
 
 /**
  * ReferenceConfig
@@ -295,9 +299,20 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
                 checkAndConvertImplicitConfig(method, map, attributes);
             }
         }
+
+		String hostToRegistry = ConfigUtils.getSystemProperty(Constants.DUBBO_IP_TO_REGISTRY);
+		if (hostToRegistry == null || hostToRegistry.length() == 0) {
+			hostToRegistry = NetUtils.getLocalHost();
+		} else if (isInvalidLocalHost(hostToRegistry)) {
+			throw new IllegalArgumentException("Specified invalid registry ip from property:" + Constants.DUBBO_IP_TO_REGISTRY + ", value:" + hostToRegistry);
+		}
+		map.put(Constants.REGISTER_IP_KEY, hostToRegistry);
+
         //attributes通过系统context进行存储.
         StaticContext.getSystemContext().putAll(attributes);
         ref = createProxy(map);
+		ConsumerModel consumerModel = new ConsumerModel(getUniqueServiceName(), this, ref, interfaceClass.getMethods());
+		ApplicationModel.initConsumerModel(getUniqueServiceName(), consumerModel);
     }
     
     private static void checkAndConvertImplicitConfig(MethodConfig method, Map<String,String> map, Map<Object,Object> attributes){
@@ -528,5 +543,18 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
     Invoker<?> getInvoker() {
         return invoker;
     }
+
+	@Parameter(excluded = true)
+	public String getUniqueServiceName() {
+		StringBuilder buf = new StringBuilder();
+		if (group != null && group.length() > 0) {
+			buf.append(group).append("/");
+		}
+		buf.append(interfaceName);
+		if (version != null && version.length() > 0) {
+			buf.append(":").append(version);
+		}
+		return buf.toString();
+	}
     
 }

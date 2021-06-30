@@ -30,7 +30,7 @@ public class NettyServer extends BaseRestServer {
     private final NettyJaxrsServer server = new NettyJaxrsServer();
 
     protected void doStart(URL url) {
-        server.setPort(url.getPort());
+        server.setPort(url.getParameter(Constants.BIND_PORT_KEY, url.getPort()));
         server.setKeepAlive(url.getParameter(Constants.KEEP_ALIVE_KEY, Constants.DEFAULT_KEEP_ALIVE));
         server.setExecutorThreadCount(url.getParameter(Constants.THREADS_KEY, Constants.DEFAULT_THREADS));
         server.setIoWorkerCount(url.getParameter(Constants.IO_THREADS_KEY, Constants.DEFAULT_IO_THREADS));

@@ -51,7 +51,7 @@ public class JettyHttpServer extends AbstractHttpServer {
         Log.setLog(new StdErrLog());
         Log.getLog().setDebugEnabled(false);
 
-        DispatcherServlet.addHttpHandler(url.getPort(), handler);
+        DispatcherServlet.addHttpHandler(url.getParameter(Constants.BIND_PORT_KEY, url.getPort()), handler);
 
         int threads = url.getParameter(Constants.THREADS_KEY, Constants.DEFAULT_THREADS);
         QueuedThreadPool threadPool = new QueuedThreadPool();
@@ -60,10 +60,11 @@ public class JettyHttpServer extends AbstractHttpServer {
         threadPool.setMinThreads(threads);
 
         SelectChannelConnector connector = new SelectChannelConnector();
+        String bindIp = url.getParameter(Constants.BIND_IP_KEY, url.getHost());
         if (! url.isAnyHost() && NetUtils.isValidLocalHost(url.getHost())) {
-            connector.setHost(url.getHost());
+            connector.setHost(bindIp);
         }
-        connector.setPort(url.getPort());
+        connector.setPort(url.getParameter(Constants.BIND_PORT_KEY, url.getPort()));
 
         server = new Server();
         server.setThreadPool(threadPool);
@@ -79,7 +80,7 @@ public class JettyHttpServer extends AbstractHttpServer {
         // TODO Context.SESSIONS is the best option here?
         Context context = new Context(server, "/", Context.SESSIONS);
         context.setServletHandler(servletHandler);
-        ServletManager.getInstance().addServletContext(url.getPort(), context.getServletContext());
+        ServletManager.getInstance().addServletContext(url.getParameter(Constants.BIND_PORT_KEY, url.getPort()), context.getServletContext());
 
         try {
             server.start();
@@ -93,7 +94,7 @@ public class JettyHttpServer extends AbstractHttpServer {
         super.close();
 
         // modified by lishen
-        ServletManager.getInstance().removeServletContext(url.getPort());
+        ServletManager.getInstance().removeServletContext(url.getParameter(Constants.BIND_PORT_KEY, url.getPort()));
 
         if (server != null) {
             try {

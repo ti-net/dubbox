@@ -81,7 +81,7 @@ public class RestProtocol extends AbstractProxyProtocol {
     }
 
     protected <T> Runnable doExport(T impl, Class<T> type, URL url) throws RpcException {
-        String addr = url.getIp() + ":" + url.getPort();
+        String addr = getAddr(url);
         Class implClass = ServiceClassHolder.getInstance().popServiceClass();
         RestServer server = servers.get(addr);
         if (server == null) {

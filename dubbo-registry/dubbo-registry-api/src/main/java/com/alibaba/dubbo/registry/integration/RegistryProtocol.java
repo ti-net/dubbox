@@ -16,6 +16,7 @@
 package com.alibaba.dubbo.registry.integration;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -198,7 +199,9 @@ public class RegistryProtocol implements Protocol {
     private URL getRegistedProviderUrl(final Invoker<?> originInvoker){
         URL providerUrl = getProviderUrl(originInvoker);
         //注册中心看到的地址
-        final URL registedProviderUrl = providerUrl.removeParameters(getFilteredKeys(providerUrl)).removeParameter(Constants.MONITOR_KEY);
+        final URL registedProviderUrl = providerUrl.removeParameters(getFilteredKeys(providerUrl)).removeParameter(Constants.MONITOR_KEY)
+                .removeParameter(Constants.BIND_IP_KEY)
+                .removeParameter(Constants.BIND_PORT_KEY);
         return registedProviderUrl;
     }
     
@@ -262,7 +265,8 @@ public class RegistryProtocol implements Protocol {
         RegistryDirectory<T> directory = new RegistryDirectory<T>(type, url);
         directory.setRegistry(registry);
         directory.setProtocol(protocol);
-        URL subscribeUrl = new URL(Constants.CONSUMER_PROTOCOL, NetUtils.getLocalHost(), 0, type.getName(), directory.getUrl().getParameters());
+        Map<String, String> parameters = new HashMap<String, String>(directory.getUrl().getParameters());
+        URL subscribeUrl = new URL(Constants.CONSUMER_PROTOCOL, parameters.remove(Constants.REGISTER_IP_KEY), 0, type.getName(), directory.getUrl().getParameters());
         if (! Constants.ANY_VALUE.equals(url.getServiceInterface())
                 && url.getParameter(Constants.REGISTER_KEY, true)) {
             registry.register(subscribeUrl.addParameters(Constants.CATEGORY_KEY, Constants.CONSUMERS_CATEGORY,
