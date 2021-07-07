@@ -462,7 +462,7 @@ public class RedisRegistry extends FailbackRegistry {
 			}
 			result.addAll(urls);
 			if (logger.isInfoEnabled()) {
-				logger.info("redis notify one oo: " + key + " = " + urls);
+				logger.info("redis notify one oo: " + key + " = " + urls + ", now time = " + now);
 			}
 		}
 		if (result.size() == 0) {
