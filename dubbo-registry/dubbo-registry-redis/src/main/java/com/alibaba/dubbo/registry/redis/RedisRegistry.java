@@ -433,7 +433,9 @@ public class RedisRegistry extends FailbackRegistry {
 					logger.info("RedisRegistry.doNotify entry.getKey():" + entry.getKey());
 					URL u = URL.valueOf(entry.getKey());
 					try {
-						logger.info("RedisRegistry.doNotify URL.String:" + u.toFullString());
+						logger.info("RedisRegistry.doNotify u.String:" + u.toFullString());
+						logger.info("RedisRegistry.doNotify url.String:" + url.toFullString());
+						logger.info("RedisRegistry.doNotify U u isMatch:" + (UrlUtils.isMatch(url, u)));
 						logger.info("RedisRegistry.doNotify u.getParameter(Constants.DYNAMIC_KEY, true):" + u.getParameter(Constants.DYNAMIC_KEY, true));
 						logger.info("RedisRegistry.doNotify entry.getValue():" + (Long.parseLong(entry.getValue()) >= now));
 					} catch (Exception e) {
