@@ -423,23 +423,31 @@ public class RedisRegistry extends FailbackRegistry {
 			List<URL> urls = new ArrayList<URL>();
 			Map<String, String> values = jedis.hgetAll(key);
 			if (values != null) {
-				logger.info("RedisRegistry.doNotify Map.size:" + values.size());
+				if (logger.isInfoEnabled()) {
+					logger.info("RedisRegistry.doNotify Map.size:" + values.size());
+				}
 			} else {
-				logger.info("RedisRegistry.doNotify Map.values is null");
+				if (logger.isInfoEnabled()) {
+					logger.info("RedisRegistry.doNotify Map.values is null");
+				}
 			}
 
 			if (values != null && values.size() > 0) {
 				for (Map.Entry<String, String> entry : values.entrySet()) {
-					logger.info("RedisRegistry.doNotify entry.getKey():" + entry.getKey());
+					if (logger.isInfoEnabled()) {
+						logger.info("RedisRegistry.doNotify entry.getKey():" + entry.getKey());
+					}
 					URL u = URL.valueOf(entry.getKey());
 					try {
-						logger.info("RedisRegistry.doNotify u.String:" + u.toFullString());
-						logger.info("RedisRegistry.doNotify url.String:" + url.toFullString());
-						logger.info("RedisRegistry.doNotify U u isMatch:" + (UrlUtils.isMatch(url, u)));
-						logger.info("RedisRegistry.doNotify u.getParameter(Constants.DYNAMIC_KEY, true):" + u.getParameter(Constants.DYNAMIC_KEY, true));
-						logger.info("RedisRegistry.doNotify entry.getValue():" + (Long.parseLong(entry.getValue()) >= now));
-					} catch (Exception e) {
-						logger.error(e.getMessage(), e);
+						if (logger.isInfoEnabled()) {
+							logger.info("RedisRegistry.doNotify u.String:" + u.toFullString());
+							logger.info("RedisRegistry.doNotify url.String:" + url.toFullString());
+							logger.info("RedisRegistry.doNotify U u isMatch:" + (UrlUtils.isMatch(url, u)));
+							logger.info("RedisRegistry.doNotify u.getParameter(Constants.DYNAMIC_KEY, true):" + u.getParameter(Constants.DYNAMIC_KEY, true));
+							logger.info("RedisRegistry.doNotify entry.getValue():" + (Long.parseLong(entry.getValue()) >= now));
+						}
+					} catch (Throwable e) {
+						e.printStackTrace();
 					}
 					if (!u.getParameter(Constants.DYNAMIC_KEY, true) || Long.parseLong(entry.getValue()) >= now) {
 						if (UrlUtils.isMatch(url, u)) {
