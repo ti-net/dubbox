@@ -457,12 +457,12 @@ public class RedisRegistry extends FailbackRegistry {
 				}
 			}
 			if (urls.isEmpty()) {
-				urls.add(url.setProtocol(Constants.EMPTY_PROTOCOL).setAddress(Constants.ANYHOST_VALUE)
+				urls.add(url.setProtocol(Constants.EMPTY_PROTOCOL).setAddress("0.0.0.1")
 						.setPath(toServiceName(key)).addParameter(Constants.CATEGORY_KEY, category));
 			}
 			result.addAll(urls);
 			if (logger.isInfoEnabled()) {
-				logger.info("redis notify: " + key + " = " + urls);
+				logger.info("redis notify one oo: " + key + " = " + urls);
 			}
 		}
 		if (result.size() == 0) {
