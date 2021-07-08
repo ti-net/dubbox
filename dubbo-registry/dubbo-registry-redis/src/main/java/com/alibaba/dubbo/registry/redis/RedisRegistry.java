@@ -273,6 +273,9 @@ public class RedisRegistry extends FailbackRegistry {
 			try {
 				Jedis jedis = jedisPool.getResource();
 				try {
+					if (logger.isInfoEnabled()) {
+						logger.info("RedisRegistry.doRegister:" + key + " - " + value + " - " +  " - " + expire);
+					}
 					jedis.hset(key, value, expire);
 					jedis.publish(key, Constants.REGISTER);
 					success = true;
@@ -444,14 +447,22 @@ public class RedisRegistry extends FailbackRegistry {
 							logger.info("RedisRegistry.doNotify url.String:" + url.toFullString());
 							logger.info("RedisRegistry.doNotify U u isMatch:" + (UrlUtils.isMatch(url, u)));
 							logger.info("RedisRegistry.doNotify u.getParameter(Constants.DYNAMIC_KEY, true):" + u.getParameter(Constants.DYNAMIC_KEY, true));
-							logger.info("RedisRegistry.doNotify entry.getValue():" + (Long.parseLong(entry.getValue()) >= now));
+							logger.info("RedisRegistry.doNotify entry.getValue():" + entry.getValue() + " - " + Long.parseLong(entry.getValue()) + " - " + now + " - "  + (Long.parseLong(entry.getValue()) >= now));
 						}
 					} catch (Throwable e) {
 						e.printStackTrace();
 					}
+
 					if (!u.getParameter(Constants.DYNAMIC_KEY, true) || Long.parseLong(entry.getValue()) >= now) {
 						if (UrlUtils.isMatch(url, u)) {
 							urls.add(u);
+						}
+					}
+
+					if (Long.parseLong(entry.getValue()) < now) {
+						if (logger.isInfoEnabled()) {
+							logger.info("RedisRegistry.doNotify jedis.getClient().getHost():" + jedis.getClient().getHost());
+							logger.info("RedisRegistry.doNotify goto else ");
 						}
 					}
 				}
